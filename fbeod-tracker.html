@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FBEOD Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --card: #161616;
+    --border: #222222;
+    --accent: #c8f135;
+    --accent-dim: #9fb82a;
+    --red: #ff4444;
+    --text: #f0f0f0;
+    --muted: #666;
+    --done: #1e2e00;
+    --done-border: #4a6a00;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    padding: 24px 16px 60px;
+    max-width: 560px;
+    margin: 0 auto;
+  }
+
+  header {
+    margin-bottom: 28px;
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px;
+    letter-spacing: 4px;
+    line-height: 1;
+    color: var(--accent);
+  }
+
+  .subtitle {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 4px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .session-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+  }
+
+  .session-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+  }
+
+  .session-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    line-height: 1;
+  }
+
+  .session-date {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    text-align: right;
+  }
+
+  .rules-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 24px;
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    line-height: 1.8;
+  }
+
+  .rules-box strong {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    padding-left: 2px;
+  }
+
+  .exercise-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 32px;
+  }
+
+  .ex-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .ex-card:active { transform: scale(0.99); }
+
+  .ex-card.done {
+    background: var(--done);
+    border-color: var(--done-border);
+  }
+
+  .ex-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .ex-left { flex: 1; }
+
+  .ex-pattern {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+  }
+
+  .ex-card.done .ex-pattern {
+    color: var(--accent-dim);
+  }
+
+  .ex-name {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.3;
+  }
+
+  .ex-card.done .ex-name {
+    color: var(--accent);
+  }
+
+  .ex-muscle {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+
+  .check-circle {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2px;
+    transition: background 0.15s, border-color 0.15s;
+  }
+
+  .ex-card.done .check-circle {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .check-circle svg {
+    display: none;
+  }
+
+  .ex-card.done .check-circle svg {
+    display: block;
+  }
+
+  .log-row {
+    display: none;
+    margin-top: 12px;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .ex-card.active .log-row {
+    display: flex;
+  }
+
+  .log-input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    padding: 7px 10px;
+    width: 90px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .log-input:focus { border-color: var(--accent); }
+  .log-input::placeholder { color: var(--muted); }
+
+  .log-sep {
+    color: var(--muted);
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .log-btn {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 7px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 8px 14px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: background 0.15s;
+  }
+
+  .log-btn:hover { background: var(--accent-dim); }
+
+  .logged-display {
+    display: none;
+    margin-top: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 0.5px;
+  }
+
+  .ex-card.done .logged-display { display: block; }
+
+  .progress-section {
+    margin-bottom: 28px;
+  }
+
+  .progress-track {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+  }
+
+  .progress-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .progress-label {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .progress-count {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    color: var(--accent);
+    letter-spacing: 2px;
+  }
+
+  .progress-bar-bg {
+    background: var(--border);
+    border-radius: 4px;
+    height: 6px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    background: var(--accent);
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .complete-banner {
+    display: none;
+    background: var(--done);
+    border: 1px solid var(--done-border);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  .complete-banner.show { display: block; }
+
+  .complete-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: var(--accent);
+    letter-spacing: 3px;
+  }
+
+  .complete-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .btn-outline {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 10px 16px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: border-color 0.15s, color 0.15s;
+    flex: 1;
+  }
+
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+  .btn-primary {
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    color: #000;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 10px 16px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    flex: 1;
+    transition: background 0.15s;
+  }
+
+  .btn-primary:hover { background: var(--accent-dim); }
+
+  .history-section {
+    margin-top: 32px;
+  }
+
+  .history-entry {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+  }
+
+  .history-date {
+    color: var(--accent);
+    margin-bottom: 6px;
+    font-size: 12px;
+  }
+
+  .history-row {
+    color: var(--muted);
+    line-height: 1.9;
+  }
+
+  .history-row span.hi { color: var(--text); }
+
+  .tip-tag {
+    display: inline-block;
+    background: #1a1a00;
+    border: 1px solid #3a3a00;
+    border-radius: 5px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: #b0b000;
+    padding: 3px 8px;
+    margin-top: 6px;
+    margin-right: 4px;
+    letter-spacing: 0.5px;
+  }
+
+  .no-history {
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    padding: 12px 0;
+    text-align: center;
+  }
+
+  .tab-row {
+    display: flex;
+    gap: 0;
+    margin-bottom: 24px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .tab {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 11px 8px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .tab.active {
+    background: var(--accent);
+    color: #000;
+    font-weight: 500;
+  }
+
+  .view { display: none; }
+  .view.active { display: block; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">FBEOD</div>
+  <div class="subtitle">Full Body · Every Other Day · Keenan Malloy</div>
+</header>
+
+<div class="tab-row">
+  <button class="tab active" onclick="switchTab('workout')">Workout</button>
+  <button class="tab" onclick="switchTab('history')">History</button>
+  <button class="tab" onclick="switchTab('guide')">Guide</button>
+</div>
+
+<!-- WORKOUT VIEW -->
+<div class="view active" id="view-workout">
+
+  <div class="session-bar">
+    <div>
+      <div class="session-label">Session</div>
+      <div class="session-num" id="session-num">01</div>
+    </div>
+    <div class="session-date" id="session-date"></div>
+  </div>
+
+  <div class="progress-section">
+    <div class="progress-track">
+      <div class="progress-top">
+        <div class="progress-label">Exercises done</div>
+        <div class="progress-count"><span id="done-count">0</span> / <span id="total-count">0</span></div>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progress-bar" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="complete-banner" id="complete-banner">
+    <div class="complete-title">Session Done 🔥</div>
+    <div class="complete-sub">Rest tomorrow · come back the day after</div>
+  </div>
+
+  <div class="section-title">Exercises — 1 set each, to failure</div>
+  <div class="exercise-list" id="exercise-list"></div>
+
+  <div class="btn-row">
+    <button class="btn-outline" onclick="resetSession()">Reset</button>
+    <button class="btn-primary" onclick="finishSession()">Finish & Save</button>
+  </div>
+
+</div>
+
+<!-- HISTORY VIEW -->
+<div class="view" id="view-history">
+  <div class="section-title">Past Sessions</div>
+  <div id="history-list"></div>
+</div>
+
+<!-- GUIDE VIEW -->
+<div class="view" id="view-guide">
+  <div class="rules-box">
+    <strong>THE RULES (Keenan Malloy FBEOD)</strong><br><br>
+    <strong>1 set per movement pattern</strong> — not more, not less.<br>
+    <strong>All sets to failure</strong> — push until you can't get another clean rep.<br>
+    <strong>5–10 reps</strong> — use a weight in this range. If you hit 10, go heavier next time.<br>
+    <strong>Every other day</strong> — train Mon, Wed, Fri (or any EOD pattern).<br>
+    <strong>Progressive overload</strong> — log your weights. Beat them next session.<br>
+    <strong>Standardise form first</strong> — same ROM every rep, every session.<br>
+    <strong>Machines > free weights for beginners</strong> — better isolation, safer failure.<br>
+    <strong>Bilateral movements</strong> — two limbs at once while learning.
+  </div>
+
+  <div class="section-title">Movement Patterns</div>
+  <div class="exercise-list">
+    <div class="ex-card" style="cursor:default">
+      <div class="ex-header">
+        <div class="ex-left">
+          <div class="ex-pattern">Knee Extension</div>
+          <div class="ex-name">Leg Extension Machine</div>
+          <div class="ex-muscle">Quads</div>
+        </div>
+      </div>
+    </div>
+    <div class="ex-card" style="cursor:default">
+      <div class="ex-header">
+        <div class="ex-left">
+          <div class="ex-pattern">Knee Flexion</div>
+          <div class="ex-name">Lying Leg Curl Machine</div>
+          <div class="ex-muscle">Hamstrings</div>
+        </div>
+      </div>
+    </div>
+    <div class="ex-card" style="cursor:default">
+      <div class="ex-header">
+        <div class="ex-left">
+          <div class="ex-pattern">Hip Extension (Hinge)</div>
+          <div class="ex-name">Romanian Deadlift / SLDL</div>
+          <div class="ex-muscle">Hamstrings, Glutes</div>
+        </div>
+      </div>
+    </div>
+    <div class="ex-card" style="cursor:default">
+      <div class="ex-header">
+        <div class="ex-left">
+          <div class="ex-pattern">Hip Adduction</div>
+          <div class="ex-name">Adductor Machine</div>
+          <div class="ex-muscle">Inner Thigh / Adductors</div>
+        </div>
+      </div>
+    </div>
+    <div class="ex-card" style="cursor:default">
+      <div class="ex-header">
+        <div class="ex-left">
+          <div class="ex-pattern">Ankle Extension</div>
+          <div class="ex-name">Calf Raise Machine</div>
+          <div class="ex-muscle">Calves (Gastrocnemius)</div>
+        </div>
+      </div>
+    </div>
+    <div class="ex-card" style="cursor:default">
+      <div class="ex-header">
+        <div class="ex-left">
+          <div class="ex-pattern">Horizontal Push (Chest)</div>
+          <div class="ex-name">Machine Chest Press</div>
+          <div class="ex-muscle">Pecs, Anterior Delt, Triceps</div>
+        </div>
+      </div>
+    </div>
+    <div class="ex-card" style="cursor:default">
+      <div class="ex-header">
+        <div class="ex-left">
+          <div class="ex-pattern">Horizontal Pull (Back)</div>
+          <div class="ex-name">Seated Cable Row</div>
+          <div class="ex-muscle">Mid Back, Rhomboids, Biceps</div>
+        </div>
+      </div>
+    </div>
+    <div class="ex-card" style="cursor:default">
+      <div class="ex-header">
+        <div class="ex-left">
+          <div class="ex-pattern">Shoulder Abduction</div>
+          <div class="ex-name">Cable Lateral Raise</div>
+          <div class="ex-muscle">Lateral Delts</div>
+        </div>
+      </div>
+    </div>
+    <div class="ex-card" style="cursor:default">
+      <div class="ex-header">
+        <div class="ex-left">
+          <div class="ex-pattern">Shoulder Adduction (Lat)</div>
+          <div class="ex-name">Lat Pulldown Machine</div>
+          <div class="ex-muscle">Lats, Biceps</div>
+        </div>
+      </div>
+    </div>
+    <div class="ex-card" style="cursor:default">
+      <div class="ex-header">
+        <div class="ex-left">
+          <div class="ex-pattern">Shoulder Flexion</div>
+          <div class="ex-name">Cable Front Raise</div>
+          <div class="ex-muscle">Anterior Delt</div>
+        </div>
+      </div>
+    </div>
+    <div class="ex-card" style="cursor:default">
+      <div class="ex-header">
+        <div class="ex-left">
+          <div class="ex-pattern">Elbow Flexion</div>
+          <div class="ex-name">Machine / Cable Curl</div>
+          <div class="ex-muscle">Biceps</div>
+        </div>
+      </div>
+    </div>
+    <div class="ex-card" style="cursor:default">
+      <div class="ex-header">
+        <div class="ex-left">
+          <div class="ex-pattern">Elbow Extension</div>
+          <div class="ex-name">Cable Tricep Pushdown</div>
+          <div class="ex-muscle">Triceps</div>
+        </div>
+      </div>
+    </div>
+    <div class="ex-card" style="cursor:default">
+      <div class="ex-header">
+        <div class="ex-left">
+          <div class="ex-pattern">Scapular Retraction</div>
+          <div class="ex-name">Rear Delt Machine / Reverse Fly</div>
+          <div class="ex-muscle">Rear Delts, Upper Back</div>
+        </div>
+      </div>
+    </div>
+    <div class="ex-card" style="cursor:default">
+      <div class="ex-header">
+        <div class="ex-left">
+          <div class="ex-pattern">Optional: Abs</div>
+          <div class="ex-name">Cable Crunch</div>
+          <div class="ex-muscle">Rectus Abdominis</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top: 8px; padding-bottom: 8px;">
+    <div class="tip-tag">machines preferred as beginner</div>
+    <div class="tip-tag">if you do SLDL, skip adductors</div>
+    <div class="tip-tag">go to true failure, no RIR</div>
+    <div class="tip-tag">hit 10 reps → add weight next session</div>
+  </div>
+</div>
+
+<script>
+const EXERCISES = [
+  { id: 'knee-ext',   pattern: 'Knee Extension',          name: 'Leg Extension Machine',       muscle: 'Quads' },
+  { id: 'knee-flex',  pattern: 'Knee Flexion',             name: 'Lying Leg Curl Machine',      muscle: 'Hamstrings' },
+  { id: 'hip-ext',    pattern: 'Hip Extension (Hinge)',    name: 'Romanian Deadlift',           muscle: 'Hamstrings / Glutes' },
+  { id: 'hip-add',    pattern: 'Hip Adduction',            name: 'Adductor Machine',            muscle: 'Inner Thigh' },
+  { id: 'ankle-ext',  pattern: 'Ankle Extension',          name: 'Calf Raise Machine',          muscle: 'Calves' },
+  { id: 'h-push',     pattern: 'Horizontal Push',          name: 'Machine Chest Press',         muscle: 'Pecs / Triceps' },
+  { id: 'h-pull',     pattern: 'Horizontal Pull',          name: 'Seated Cable Row',            muscle: 'Mid Back / Biceps' },
+  { id: 'sh-abd',     pattern: 'Shoulder Abduction',       name: 'Cable Lateral Raise',         muscle: 'Lateral Delts' },
+  { id: 'lat-pull',   pattern: 'Shoulder Adduction (Lat)', name: 'Lat Pulldown Machine',        muscle: 'Lats' },
+  { id: 'sh-flex',    pattern: 'Shoulder Flexion',         name: 'Cable Front Raise',           muscle: 'Anterior Delt' },
+  { id: 'el-flex',    pattern: 'Elbow Flexion',            name: 'Machine / Cable Curl',        muscle: 'Biceps' },
+  { id: 'el-ext',     pattern: 'Elbow Extension',          name: 'Cable Tricep Pushdown',       muscle: 'Triceps' },
+  { id: 'scap-ret',   pattern: 'Scapular Retraction',      name: 'Reverse Fly / Rear Delt Mach', muscle: 'Rear Delts' },
+];
+
+let state = JSON.parse(localStorage.getItem('fbeod_state') || 'null') || {
+  sessionNum: 1,
+  done: {},
+  logs: {},
+  history: []
+};
+
+function save() {
+  localStorage.setItem('fbeod_state', JSON.stringify(state));
+}
+
+function formatDate(d) {
+  return new Date(d).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+}
+
+function updateProgress() {
+  const total = EXERCISES.length;
+  const done = EXERCISES.filter(e => state.done[e.id]).length;
+  document.getElementById('done-count').textContent = done;
+  document.getElementById('total-count').textContent = total;
+  const pct = total ? (done / total * 100) : 0;
+  document.getElementById('progress-bar').style.width = pct + '%';
+  const banner = document.getElementById('complete-banner');
+  if (done === total) {
+    banner.classList.add('show');
+  } else {
+    banner.classList.remove('show');
+  }
+}
+
+function buildWorkout() {
+  const list = document.getElementById('exercise-list');
+  list.innerHTML = '';
+
+  document.getElementById('session-num').textContent = String(state.sessionNum).padStart(2, '0');
+  document.getElementById('session-date').textContent = formatDate(Date.now());
+
+  EXERCISES.forEach(ex => {
+    const card = document.createElement('div');
+    card.className = 'ex-card' + (state.done[ex.id] ? ' done' : '');
+    card.id = 'card-' + ex.id;
+
+    const logVal = state.logs[ex.id] || {};
+    const loggedText = logVal.weight && logVal.reps ? `${logVal.weight}kg × ${logVal.reps} reps` : '';
+
+    card.innerHTML = `
+      <div class="ex-header" onclick="toggleActive('${ex.id}')">
+        <div class="ex-left">
+          <div class="ex-pattern">${ex.pattern}</div>
+          <div class="ex-name">${ex.name}</div>
+          <div class="ex-muscle">${ex.muscle}</div>
+        </div>
+        <div class="check-circle">
+          <svg width="13" height="10" viewBox="0 0 13 10" fill="none">
+            <path d="M1.5 5L5 8.5L11.5 1.5" stroke="#000" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+      <div class="log-row">
+        <input class="log-input" id="w-${ex.id}" type="number" placeholder="kg" min="0" step="0.5" value="${logVal.weight || ''}">
+        <span class="log-sep">×</span>
+        <input class="log-input" id="r-${ex.id}" type="number" placeholder="reps" min="1" max="50" value="${logVal.reps || ''}">
+        <button class="log-btn" onclick="markDone('${ex.id}')">Done</button>
+      </div>
+      <div class="logged-display" id="logged-${ex.id}">${loggedText}</div>
+    `;
+
+    list.appendChild(card);
+  });
+
+  updateProgress();
+}
+
+let activeCard = null;
+
+function toggleActive(id) {
+  if (state.done[id]) {
+    // Undo
+    state.done[id] = false;
+    delete state.logs[id];
+    save();
+    buildWorkout();
+    return;
+  }
+  const card = document.getElementById('card-' + id);
+  if (activeCard && activeCard !== id) {
+    const prev = document.getElementById('card-' + activeCard);
+    if (prev) prev.classList.remove('active');
+  }
+  if (activeCard === id) {
+    card.classList.remove('active');
+    activeCard = null;
+  } else {
+    card.classList.add('active');
+    activeCard = id;
+    setTimeout(() => {
+      const input = document.getElementById('w-' + id);
+      if (input) input.focus();
+    }, 50);
+  }
+}
+
+function markDone(id) {
+  const w = document.getElementById('w-' + id).value;
+  const r = document.getElementById('r-' + id).value;
+  state.logs[id] = { weight: w || '—', reps: r || '—' };
+  state.done[id] = true;
+  activeCard = null;
+  save();
+  buildWorkout();
+}
+
+function finishSession() {
+  const done = EXERCISES.filter(e => state.done[e.id]);
+  if (done.length === 0) { alert('Complete at least one exercise first.'); return; }
+
+  const entry = {
+    num: state.sessionNum,
+    date: new Date().toISOString(),
+    logs: { ...state.logs }
+  };
+
+  state.history.unshift(entry);
+  state.sessionNum++;
+  state.done = {};
+  state.logs = {};
+  save();
+  buildWorkout();
+  renderHistory();
+  alert('Session saved! Rest tomorrow, then come back.');
+}
+
+function resetSession() {
+  if (!confirm('Reset current session?')) return;
+  state.done = {};
+  state.logs = {};
+  save();
+  buildWorkout();
+}
+
+function renderHistory() {
+  const el = document.getElementById('history-list');
+  if (!state.history.length) {
+    el.innerHTML = '<div class="no-history">No sessions logged yet.</div>';
+    return;
+  }
+  el.innerHTML = state.history.map(s => {
+    const rows = EXERCISES
+      .filter(e => s.logs[e.id])
+      .map(e => {
+        const l = s.logs[e.id];
+        return `<div class="history-row"><span class="hi">${e.name}</span> — ${l.weight}kg × ${l.reps} reps</div>`;
+      }).join('');
+    return `
+      <div class="history-entry">
+        <div class="history-date">Session ${String(s.num).padStart(2,'0')} · ${formatDate(s.date)}</div>
+        ${rows || '<div class="history-row">No exercises logged.</div>'}
+      </div>
+    `;
+  }).join('');
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  event.target.classList.add('active');
+  if (name === 'history') renderHistory();
+}
+
+buildWorkout();
+</script>
+</body>
+</html>
